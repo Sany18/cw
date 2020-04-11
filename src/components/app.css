@@ -1,0 +1,99 @@
+@font-face {
+  font-family: 'Didact Gothic';
+  src: url('../assets/DidactGothic-Regular.ttf');
+}
+
+* {
+  font-family: Didact Gothic;
+  font-size: .5cm;
+}
+
+body {
+  background-color: #123;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+input, .input {
+  padding: .15cm .3cm .15cm .3cm;
+  border-radius: 5px;
+  border: 1px solid grey;
+}
+
+input:focus {
+  outline: none;
+}
+
+.content {
+  display: flex;
+  width: 21cm;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.cars {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.car {
+  margin: 5px;
+  display: flex;
+  flex: 1;
+  min-width: 3.5cm;
+  flex-direction: column;
+  align-items: center;
+}
+
+.car__description {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.car__amount {
+  color: #fff;
+}
+
+.powered-by {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  color: white;
+  padding: 2px;
+}
+
+.part {
+  width: 48%;
+}
+
+.cargo input {
+  width: 43.53%;
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+}
+
+.choose-location {
+  display: flex;
+  flex-direction: column;
+}
+
+.choose-location__label {
+  color: white;
+}
+
+.result__distance {
+  background-color: white;
+  color: black;
+  height: .65cm;
+  display: flex;
+  align-items: center;
+}

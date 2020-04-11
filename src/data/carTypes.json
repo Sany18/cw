@@ -1,0 +1,43 @@
+[
+  {
+    "name": "Awning",
+    "costByKm": 15,
+    "maxWeight": 8
+  }, {
+    "name": "Full-metal",
+    "costByKm": 18,
+    "maxWeight": 10
+  }, {
+    "name": "Van",
+    "costByKm": 10,
+    "maxWeight": 3
+  }, {
+    "name": "Isotherm",
+    "costByKm": 12,
+    "maxWeight": 5
+  }, {
+    "name": "Refrigerator",
+    "costByKm": 12,
+    "maxWeight": 4
+  }, {
+    "name": "Curtain",
+    "costByKm": 14,
+    "maxWeight": 8
+  }, {
+    "name": "Onboard",
+    "costByKm": 13,
+    "maxWeight": 8
+  }, {
+    "name": "Grain truck",
+    "costByKm": 13,
+    "maxWeight": 8
+  }, {
+    "name": "Tow truck",
+    "costByKm": 10,
+    "maxWeight": 5
+  }, {
+    "name": "Manipulator",
+    "costByKm": 8,
+    "maxWeight": 3
+  }
+]
