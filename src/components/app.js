@@ -1,6 +1,7 @@
 import React from 'react'
 import AsyncSelect from 'react-select/async'
 import { getDistance } from 'geolib'
+import { withAlert } from 'react-alert'
 
 import cities from 'data/cities.json'
 import carLocations from 'data/carLocations.json'
@@ -33,7 +34,11 @@ class App extends React.Component {
     from: null,
     whereTo: null,
     distance: null,
-    selectedCarTypes: {}
+    selectedCarTypes: {},
+    selectedWeight: 0,
+    name: '',
+    comment: '',
+    nearestCars: []
   }
 
   findCities = query => {
@@ -55,20 +60,79 @@ class App extends React.Component {
     setTimeout(_ => callback(this.findCities(query)), 0)
   )
 
-  handleChangeField = name => value => {
-    this.setState({ [name]: value }, this.calculateDistance)
+  handleChangeAsyncSelect = name => value => {
+    this.setState({ [name]: value })
   }
 
-  calculateDistance = () => {
-    const { from, whereTo } = this.state
+  handleChange = name => ({ target: { value } }) => {
+    this.setState({ [name]: value })
+  }
 
-    if (from && whereTo) {
-      this.setState({ distance: getDistance(
-        { latitude: from.lat, longitude: from.lng },
-        { latitude: whereTo.lat, longitude: whereTo.lng }
-      ) / 1000 })
+  calculate = () => {
+    const { alert } = this.props
+    const { from, whereTo, selectedWeight, selectedCarTypes } = this.state
+    const newState = {}
+    const nearestCars = []
+
+    if (!from || !whereTo) return alert.show('Choose locations')
+    if (!selectedWeight) return alert.show('Enter the weight')
+
+    newState.distance = getDistance(
+      { latitude: from.lat, longitude: from.lng },
+      { latitude: whereTo.lat, longitude: whereTo.lng }
+    ) / 1000
+    
+    const localSelectedCarTypes = (() => (
+      Object.keys(selectedCarTypes).filter(key => selectedCarTypes[key]).length
+        ? carLocations.filter(i => selectedCarTypes[i.name])
+        : carLocations
+    ))()
+
+    for (let i = 0; i < localSelectedCarTypes.length; i++) {
+      if (selectedWeight > carTypes.filter(item => item.name === carLocations[i].name)[0].maxWeight * 1000) continue
+      nearestCars.push({
+        disanceToCar: getDistance(
+          { latitude: from.lat, longitude: from.lng },
+          { latitude: localSelectedCarTypes[i].latitude, longitude: localSelectedCarTypes[i].longitude }
+        ),
+        name: localSelectedCarTypes[i].name,
+        costByKm: carTypes.filter(item => item.name === carLocations[i].name)[0].costByKm
+      })
     }
+
+    newState.nearestCars = nearestCars.sort((a, b) => a.disanceToCar - b.disanceToCar)
+
+    this.setState(newState)
   }
+
+  renderDetails = () => {
+    const { selectedWeight, selectedCarTypes, name, comment } = this.state
+    const selectedCars = Object.keys(selectedCarTypes)
+      .filter(key => selectedCarTypes[key])
+      .join(', ')
+
+    return <div className='other-info input'>
+      {'car types: ' + (selectedCars ? 'only: ' + selectedCars : 'all types')}<br />
+      {'name: ' + name}<br />
+      {'weight: ' + selectedWeight + 'kg'}<br />
+      {'comment: ' + comment}<br />
+    </div>
+  }
+
+  renderNearestCars = () => (
+    <div className='other-info input'>
+      {this.state.nearestCars.map((item, ind) => (
+        ind < 5
+          ? <div key={'car' + ind} className='other-info__car'>
+            <span>{ind + 1 + '. ' + item.name}</span>
+            <span>{'to car: ' + (item.disanceToCar / 1000) + 'km'}</span>
+            <span>{'cost by km: ' + (item.costByKm / 10) + '$'}</span>
+            <span>{'total cost: ' + (item.costByKm / 10 * this.state.distance).toFixed(2) + '$'}</span><br />
+          </div>
+          : null
+      ))}
+    </div>
+  )
 
   renderCars = (carItems = []) => {
     const { selectedCarTypes } = this.state
@@ -88,6 +152,8 @@ class App extends React.Component {
           <img src={imagePath('./car' + i +'.svg')} alt='' />
           <div className='car__description'>
             <div className='car__amount'>{carName}</div>
+            <div className='car__amount'>{'max weight: ' + carTypes[i - 1].maxWeight + 't'}</div>
+            <div className='car__amount'>{'$ per km: ' + carTypes[i - 1].costByKm / 10 + '$'}</div>
             <div className='car__amount'>
               {'Available ' + amountOfAvailableCars[carName] + ' cars'}
             </div>
@@ -103,8 +169,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { distance, selectedCarTypes } = this.state
-    console.log(selectedCarTypes)
+    const { distance } = this.state
 
     return (
       <div className='content'>
@@ -117,27 +182,39 @@ class App extends React.Component {
             <div className='choose-location'>
               <div className='choose-location__label'>For search enter min 3 symbols</div>
               <AsyncSelect placeholder='From' loadOptions={this.handleChangeCity}
-                  defaultValue={defaultCities[0]}
                   defaultOptions={defaultCities}
-                  onChange={this.handleChangeField('from')} />
+                  onChange={this.handleChangeAsyncSelect('from')} />
               <AsyncSelect placeholder='Where to' loadOptions={this.handleChangeCity}
-                  defaultValue={defaultCities[2]}
                   defaultOptions={defaultCities}
-                  onChange={this.handleChangeField('whereTo')} />
+                  onChange={this.handleChangeAsyncSelect('whereTo')} />
             </div>
             <div className='cargo'>
-              <input type='text' placeholder='Name' required />
-              <input type='text' placeholder='Weight' required />
+              <input type='text' placeholder='Name'
+                  onChange={this.handleChange('name')} />
+              <input type='number' placeholder='Weight (kg)'
+                  onChange={this.handleChange('selectedWeight')}
+                  step='0.5'
+                  min='0.5'
+                  max='10000' />
             </div>
-            <input type='text' placeholder='Comment' />
+            <input type='text' placeholder='Comment'
+                onChange={this.handleChange('comment')} />
           </div>
+
+          <button className='find-a-car-button' onClick={this.calculate}>
+            Find a car
+          </button>
         </div>
 
         <div className='right-part part'>
-          <div className='choose-location__label'>Results</div>
+          <div className='choose-location__label'>Details</div>
+          {this.renderDetails()}
+          <div className='choose-location__label'>Distance between locations</div>
           <div className='result__distance input'>
             {distance ? distance + ' km' : 'Choose destinations'}
           </div>
+          <div className='choose-location__label'>Nearest cars</div>
+          {this.renderNearestCars()}
         </div>
         <div className='powered-by'>Vlad Nikolskiy</div>
       </div>
@@ -145,4 +222,4 @@ class App extends React.Component {
   }
 }
 
-export default App
+export default withAlert()(App)
